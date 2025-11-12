@@ -8,6 +8,7 @@ import { listProductsByOrganizer } from "@/lib/data/products"
 import { getOrganizerById } from "@/lib/data/organizers"
 import { formatCurrencyFromCents, formatDate } from "@/lib/utils"
 import { supabaseAdminClient } from "@/lib/supabase-admin"
+import { CreateEventButton } from "@/components/dashboard/create-event-button"
 
 async function getProductStats(productIds: string[]) {
   if (productIds.length === 0) {
@@ -45,6 +46,27 @@ async function getProductStats(productIds: string[]) {
   return stats
 }
 
+function hasRequiredAccountDetails(organizer?: Awaited<ReturnType<typeof getOrganizerById>>): boolean {
+  if (!organizer) {
+    return true
+  }
+  const bankDetails = organizer.bank_details as Record<string, unknown> | null | undefined
+  if (!bankDetails) {
+    return false
+  }
+  const details = bankDetails as {
+    accountNumber?: unknown
+    accountName?: unknown
+    bankCode?: unknown
+  }
+  const accountNumber =
+    typeof details.accountNumber === "string" ? details.accountNumber.trim() : ""
+  const bankCode = typeof details.bankCode === "string" ? details.bankCode.trim() : ""
+  const accountName = typeof details.accountName === "string" ? details.accountName.trim() : ""
+
+  return Boolean(accountNumber && accountName && bankCode)
+}
+
 export default async function EventsPage() {
   const authUser = await requireAuthenticatedUser()
   const organizerId = authUser.profile.organizer_id
@@ -65,6 +87,7 @@ export default async function EventsPage() {
 
   const organizer = organizerId ? await getOrganizerById(organizerId) : null
   const products = organizerId ? await listProductsByOrganizer(organizerId) : []
+  const hasAccountDetails = hasRequiredAccountDetails(organizer)
 
   const productIds = products.map((product) => product.id)
   const stats = await getProductStats(productIds)
@@ -76,12 +99,14 @@ export default async function EventsPage() {
           <h1 className="text-4xl font-bold text-foreground">{organizer ? `${organizer.name} Products` : "Products"}</h1>
           <p className="text-foreground/70">Create and manage the products powering your checkout experiences.</p>
         </div>
-        <Link href="/dashboard/events/new">
-          <Button className="bg-primary hover:bg-accent text-primary-foreground gap-2">
-            <FiPlus className="h-4 w-4" />
-            New Product
-          </Button>
-        </Link>
+        <CreateEventButton
+          hasAccountDetails={hasAccountDetails}
+          profileHref="/dashboard/settings?tab=profile"
+          className="bg-primary hover:bg-accent text-primary-foreground gap-2"
+        >
+          <FiPlus className="h-4 w-4" />
+          New Product
+        </CreateEventButton>
       </div>
 
       {products.length > 0 ? (
@@ -140,12 +165,14 @@ export default async function EventsPage() {
             <FiBox className="mx-auto h-10 w-10 text-primary" />
             <h3 className="text-xl font-semibold text-foreground">No products yet</h3>
             <p className="text-foreground/70">Add your first ticketed experience to start selling.</p>
-            <Link href="/dashboard/events/new">
-              <Button className="bg-primary hover:bg-accent text-primary-foreground gap-2">
-                <FiPlus className="h-4 w-4" />
-                Create Product
-              </Button>
-            </Link>
+            <CreateEventButton
+              hasAccountDetails={hasAccountDetails}
+              profileHref="/dashboard/settings?tab=profile"
+              className="bg-primary hover:bg-accent text-primary-foreground gap-2"
+            >
+              <FiPlus className="h-4 w-4" />
+              Create Product
+            </CreateEventButton>
           </CardContent>
         </Card>
       )}

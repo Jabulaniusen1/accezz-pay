@@ -3,16 +3,20 @@
 import type React from "react"
 import Link from "next/link"
 import { useMemo, useState } from "react"
-import { usePathname } from "next/navigation"
-import { FiGrid, FiCalendar, FiLogOut, FiMenu, FiChevronRight, FiBell } from "react-icons/fi"
+import { useFormStatus } from "react-dom"
+import { usePathname, useSearchParams } from "next/navigation"
+import { FiGrid, FiCalendar, FiLogOut, FiMenu, FiChevronRight, FiBell, FiUser } from "react-icons/fi"
 import { Palette, Wallet } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import type { OrganizerBranding } from "@/types/database"
+import { logoutAction } from "@/app/dashboard/actions"
 
 type DashboardLayoutShellProps = {
   children: React.ReactNode
   organizerName?: string
+  contactName?: string
   branding?: OrganizerBranding
 }
 
@@ -26,9 +30,11 @@ function lightenColor(hexColor: string, intensity = 0.8) {
   return `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`
 }
 
-export function DashboardLayoutShell({ children, organizerName, branding }: DashboardLayoutShellProps) {
+export function DashboardLayoutShell({ children, organizerName, contactName, branding }: DashboardLayoutShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(true)
   const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const activeTab = searchParams?.get("tab") === "profile" ? "profile" : "branding"
 
   const styleVariables = useMemo(() => {
     const primary = branding?.primaryColor ?? "#6B21A8"
@@ -41,10 +47,36 @@ export function DashboardLayoutShell({ children, organizerName, branding }: Dash
   }, [branding])
 
   const navigationItems = [
-    { href: "/dashboard", label: "Overview", icon: <FiGrid className="h-4 w-4" /> },
-    { href: "/dashboard/settings", label: "Branding", icon: <Palette className="h-4 w-4" /> },
-    { href: "/dashboard/events", label: "Events", icon: <FiCalendar className="h-4 w-4" /> },
-    { href: "/dashboard/wallet", label: "Wallet", icon: <Wallet className="h-4 w-4" /> },
+    {
+      href: "/dashboard",
+      label: "Overview",
+      icon: <FiGrid className="h-4 w-4" />,
+      isActive: pathname === "/dashboard",
+    },
+    {
+      href: "/dashboard/settings?tab=branding",
+      label: "Branding",
+      icon: <Palette className="h-4 w-4" />,
+      isActive: pathname === "/dashboard/settings" && activeTab !== "profile",
+    },
+    {
+      href: "/dashboard/settings?tab=profile",
+      label: "Profile",
+      icon: <FiUser className="h-4 w-4" />,
+      isActive: pathname === "/dashboard/settings" && activeTab === "profile",
+    },
+    {
+      href: "/dashboard/events",
+      label: "Events",
+      icon: <FiCalendar className="h-4 w-4" />,
+      isActive: pathname === "/dashboard/events" || pathname.startsWith("/dashboard/events/"),
+    },
+    {
+      href: "/dashboard/wallet",
+      label: "Wallet",
+      icon: <Wallet className="h-4 w-4" />,
+      isActive: pathname === "/dashboard/wallet" || pathname.startsWith("/dashboard/wallet/"),
+    },
   ]
 
   return (
@@ -81,18 +113,20 @@ export function DashboardLayoutShell({ children, organizerName, branding }: Dash
           </div>
           <nav className="flex flex-1 flex-col gap-2" style={{ fontFamily: "var(--brand-font)" }}>
             {navigationItems.map((item) => {
-              const isActive =
-                pathname === item.href || (item.href !== "/dashboard" && pathname.startsWith(`${item.href}/`))
               return (
                 <Link key={item.href} href={item.href}>
                   <div
                     className={`group flex items-center gap-3 rounded-2xl px-3 py-3 text-sm font-medium transition ${
-                      isActive ? "bg-white text-[var(--brand-primary)] shadow-lg" : "text-white/80 hover:bg-white/10"
+                      item.isActive
+                        ? "bg-white text-[var(--brand-primary)] shadow-lg"
+                        : "text-white/80 hover:bg-white/10"
                     }`}
                   >
                     <span
                       className={`flex h-10 w-10 items-center justify-center rounded-xl text-base transition ${
-                        isActive ? "bg-[var(--brand-secondary)] text-[var(--brand-primary)]" : "bg-white/15 text-white"
+                        item.isActive
+                          ? "bg-[var(--brand-secondary)] text-[var(--brand-primary)]"
+                          : "bg-white/15 text-white"
                       }`}
                     >
                       {item.icon}
@@ -110,14 +144,9 @@ export function DashboardLayoutShell({ children, organizerName, branding }: Dash
               Explore
             </Button>
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="mt-6 w-full justify-center gap-2 rounded-2xl bg-white/15 text-white hover:bg-white/25"
-          >
-            <FiLogOut className="h-4 w-4" />
-            {sidebarOpen && <span>Logout</span>}
-          </Button>
+          <form action={logoutAction} className="mt-6 w-full">
+            <LogoutButton sidebarOpen={sidebarOpen} />
+          </form>
         </div>
       </aside>
 
@@ -130,7 +159,7 @@ export function DashboardLayoutShell({ children, organizerName, branding }: Dash
             <div>
               <p className="text-sm font-medium text-[var(--brand-primary)]/80">Organizer Dashboard</p>
               <h1 className="text-2xl font-semibold text-slate-900">
-                Welcome back{organizerName ? ` ${organizerName}` : ""}!
+                Welcome back{contactName ? ` ${contactName}` : ""}!
               </h1>
             </div>
             <div className="flex items-center gap-3">
@@ -149,7 +178,6 @@ export function DashboardLayoutShell({ children, organizerName, branding }: Dash
             </div>
           </div>
         </header>
-
         <main className="flex-1 overflow-y-auto px-4 pb-10 lg:px-10" style={{ fontFamily: "var(--brand-font)" }}>
           <div className="min-h-full rounded-[40px] bg-white/90 p-6 shadow-[0_24px_48px_-24px_rgba(15,23,42,0.35)] ring-1 ring-slate-100">
             {children}
@@ -157,5 +185,21 @@ export function DashboardLayoutShell({ children, organizerName, branding }: Dash
         </main>
       </div>
     </div>
+  )
+}
+
+function LogoutButton({ sidebarOpen }: { sidebarOpen: boolean }) {
+  const { pending } = useFormStatus()
+  return (
+    <Button
+      type="submit"
+      variant="ghost"
+      size="sm"
+      disabled={pending}
+      className="w-full justify-center gap-2 rounded-2xl bg-white/15 text-white hover:bg-white/25 disabled:opacity-70"
+    >
+      <FiLogOut className="h-4 w-4" />
+      {sidebarOpen && <span>{pending ? "Logging out..." : "Logout"}</span>}
+    </Button>
   )
 }

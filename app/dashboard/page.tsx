@@ -8,6 +8,7 @@ import { requireAuthenticatedUser } from "@/lib/auth"
 import { getOrganizerDashboardSummary } from "@/lib/data/organizers"
 import { listProductsByOrganizer } from "@/lib/data/products"
 import { Ticket } from "lucide-react"
+import { CreateEventButton } from "@/components/dashboard/create-event-button"
 
 export default async function DashboardPage() {
   const authUser = await requireAuthenticatedUser()
@@ -78,6 +79,23 @@ export default async function DashboardPage() {
       ]
     : []
 
+  const bankDetails = summary?.organizer.bank_details as {
+    accountNumber?: unknown
+    accountName?: unknown
+    bankCode?: unknown
+  } | null
+  const hasAccountDetails = summary
+    ? Boolean(
+        bankDetails &&
+          typeof bankDetails.accountNumber === "string" &&
+          bankDetails.accountNumber.trim() &&
+          typeof bankDetails.accountName === "string" &&
+          bankDetails.accountName.trim() &&
+          typeof bankDetails.bankCode === "string" &&
+          bankDetails.bankCode.trim(),
+      )
+    : true
+
   return (
     <div className="space-y-10">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -90,11 +108,13 @@ export default async function DashboardPage() {
             Keep an eye on sales, tickets, and product performance in one place.
           </p>
         </div>
-        <Link href="/dashboard/events/new" className="self-start md:self-auto">
-          <Button className="rounded-full bg-[var(--brand-primary)] px-6 text-white shadow-lg hover:bg-[var(--brand-primary)]/90">
-            Create Event
-          </Button>
-        </Link>
+        <CreateEventButton
+          hasAccountDetails={hasAccountDetails}
+          profileHref="/dashboard/settings?tab=profile"
+          className="rounded-full bg-[var(--brand-primary)] px-6 text-white shadow-lg hover:bg-[var(--brand-primary)]/90"
+        >
+          Create Event
+        </CreateEventButton>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

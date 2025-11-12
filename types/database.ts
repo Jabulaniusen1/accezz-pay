@@ -20,6 +20,7 @@ export type OrganizerBankDetails = {
   bankName?: string
   accountNumber?: string
   accountName?: string
+  bankCode?: string
   [key: string]: unknown
 }
 
@@ -81,6 +82,7 @@ export type Product = {
 }
 
 export type TicketType = {
+  description: string
   id: string
   product_id: string
   name: string

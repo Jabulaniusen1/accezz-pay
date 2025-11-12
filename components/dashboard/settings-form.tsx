@@ -39,9 +39,10 @@ import { cn } from "@/lib/utils"
 type SettingsFormProps = {
   organizer: Organizer
   banks: PaystackBank[]
+  defaultTab?: 'branding' | 'profile'
 }
 
-export function SettingsForm({ organizer, banks }: SettingsFormProps) {
+export function SettingsForm({ organizer, banks, defaultTab }: SettingsFormProps) {
   const router = useRouter()
   const [brandingPending, startBrandingTransition] = useTransition()
   const [settingsPending, startSettingsTransition] = useTransition()
@@ -403,8 +404,10 @@ export function SettingsForm({ organizer, banks }: SettingsFormProps) {
     }
   }
 
+  const initialTab = defaultTab ?? 'branding'
+
   return (
-    <Tabs defaultValue="branding" className="space-y-8">
+    <Tabs defaultValue={initialTab} className="space-y-8">
       <TabsList className="flex w-full max-w-2xl justify-between rounded-full bg-white/70 p-1 ring-1 ring-slate-200 backdrop-blur">
         <TabsTrigger
           value="branding"

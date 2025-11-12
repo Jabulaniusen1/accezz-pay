@@ -5,7 +5,11 @@ import { requireAuthenticatedUser } from "@/lib/auth"
 import { getOrganizerById } from "@/lib/data/organizers"
 import { listPaystackBanks } from "@/lib/paystack"
 
-export default async function SettingsPage() {
+type SettingsPageProps = {
+  searchParams?: Record<string, string | string[] | undefined>
+}
+
+export default async function SettingsPage({ searchParams }: SettingsPageProps) {
   const authUser = await requireAuthenticatedUser()
   const organizerId = authUser.profile.organizer_id
   if (!organizerId) {
@@ -22,6 +26,10 @@ export default async function SettingsPage() {
     return []
   })
 
+  const tabParam = searchParams?.tab
+  const tabValue = Array.isArray(tabParam) ? tabParam[0] : tabParam
+  const defaultTab = tabValue === "profile" ? "profile" : "branding"
+
   return (
     <div className="space-y-8">
       <div className="rounded-3xl bg-gradient-to-br from-white/90 via-white to-white/80 p-8 shadow-[0_24px_48px_-32px_rgba(15,23,42,0.45)] ring-1 ring-slate-100">
@@ -31,7 +39,7 @@ export default async function SettingsPage() {
           Refresh your storefront visuals and keep payout details current for seamless settlements.
         </p>
       </div>
-      <SettingsForm organizer={organizer} banks={banks} />
+      <SettingsForm organizer={organizer} banks={banks} defaultTab={defaultTab} />
     </div>
   )
 }
