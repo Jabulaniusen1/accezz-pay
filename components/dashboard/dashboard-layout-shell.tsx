@@ -129,7 +129,9 @@ export function DashboardLayoutShell({ children, organizerName, branding }: Dash
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-sm font-medium text-[var(--brand-primary)]/80">Organizer Dashboard</p>
-              <h1 className="text-2xl font-semibold text-slate-900">Welcome back!</h1>
+              <h1 className="text-2xl font-semibold text-slate-900">
+                Welcome back{organizerName ? ` ${organizerName}` : ""}!
+              </h1>
             </div>
             <div className="flex items-center gap-3">
               <button className="flex h-11 w-11 items-center justify-center rounded-full bg-white text-slate-600 shadow-sm ring-1 ring-slate-200 hover:text-[var(--brand-primary)]">
