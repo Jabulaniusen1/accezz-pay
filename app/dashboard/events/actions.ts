@@ -5,6 +5,7 @@ import { z } from "zod"
 
 import { requireAuthenticatedUser } from "@/lib/auth"
 import { createProduct, updateProduct, createTicketType, updateTicketType, deleteTicketType } from "@/lib/data/products"
+import { updateOrganizerBranding } from "@/lib/data/organizers"
 import type { TicketType } from "@/types/database"
 import { supabaseAdminClient } from "@/lib/supabase-admin"
 
@@ -55,6 +56,14 @@ function combineDateTime(date: string | null | undefined, time: string | null | 
 }
 
 export type EventFormInput = z.input<typeof eventSchema>
+
+const brandingSchema = z.object({
+  organizerId: z.string().min(1, "Organizer ID required"),
+  primaryColor: z.string().min(1, "Primary color required"),
+  secondaryColor: z.string().min(1, "Secondary color required"),
+  fontFamily: z.string().min(1, "Font family required"),
+  logoUrl: z.string().nullable(),
+})
 
 export async function createEventAction(input: EventFormInput) {
   const authUser = await requireAuthenticatedUser()
@@ -191,5 +200,23 @@ export async function updateEventAction(input: EventFormInput) {
   }
 
   redirect(`/dashboard/events/${parsed.productId}?status=updated`)
+}
+
+export async function updateBrandingAction(input: z.input<typeof brandingSchema>) {
+  const authUser = await requireAuthenticatedUser()
+  const parsed = brandingSchema.parse(input)
+
+  if (authUser.profile.role !== "superadmin" && authUser.profile.organizer_id !== parsed.organizerId) {
+    throw new Error("Forbidden")
+  }
+
+  const updated = await updateOrganizerBranding(parsed.organizerId, {
+    primaryColor: parsed.primaryColor,
+    secondaryColor: parsed.secondaryColor,
+    fontFamily: parsed.fontFamily,
+    logoUrl: parsed.logoUrl ?? undefined,
+  })
+
+  return updated.branding
 }
 

@@ -1,18 +1,18 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { FiEdit, FiLink, FiCode, FiEye, FiTrendingUp, FiUsers, FiCheckCircle } from "react-icons/fi"
+import { FiEdit, FiLink, FiCode, FiEye, FiTrendingUp, FiUsers, FiCheckCircle, FiChevronDown } from "react-icons/fi"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { CopyLinkField } from "@/components/dashboard/copy-link-field"
 import { requireAuthenticatedUser } from "@/lib/auth"
 import { getProductWithTicketTypes } from "@/lib/data/products"
-import { getOrganizerById } from "@/lib/data/organizers"
+import { getOrganizerById, updateOrganizerBranding } from "@/lib/data/organizers"
 import { summarizeTicketsByProduct } from "@/lib/data/tickets"
 import { listOrdersForProduct } from "@/lib/data/orders"
 import { formatCurrencyFromCents, formatDate } from "@/lib/utils"
 import { DEFAULT_BRAND_COLOR } from "@/lib/constants"
-import { CheckoutClient } from "@/components/checkout/checkout-client"
+import { CheckoutPreviewCustomizer } from "@/components/dashboard/checkout-preview-customizer"
 
 const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"
 
@@ -120,15 +120,21 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
       </Card>
 
       <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+        <CardHeader className="flex flex-col gap-1">
+          <div className="flex items-center gap-2">
             <FiCode className="h-5 w-5 text-primary" />
-            Embed Snippet
-          </CardTitle>
+            <CardTitle>Embed Snippet</CardTitle>
+          </div>
           <CardDescription>Drop this into your website to launch AccezzPay checkout.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
-          <pre className="rounded-lg border border-border bg-muted p-4 text-xs leading-relaxed text-foreground overflow-x-auto">
+          <details className="group rounded-2xl border border-border bg-muted/60 shadow-sm transition">
+            <summary className="flex cursor-pointer items-center justify-between gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-foreground/80 transition group-open:rounded-b-none group-open:border-b border-border">
+              <span>View embed code</span>
+              <FiChevronDown className="h-4 w-4 transition duration-200 group-open:rotate-180" />
+            </summary>
+            <div className="border-t border-border bg-background/95">
+              <pre className="max-h-[360px] overflow-auto rounded-b-2xl bg-transparent p-4 text-xs leading-relaxed text-foreground">
 {`<script src="${appUrl}/sdk/accezzpay.js"></script>
 <script>
   AccezzPay.init({
@@ -138,7 +144,9 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
   });
   AccezzPay.open();
 </script>`}
-          </pre>
+              </pre>
+            </div>
+          </details>
           <p className="text-xs text-foreground/60">Replace the public key above with your production Paystack key.</p>
         </CardContent>
       </Card>
@@ -149,12 +157,10 @@ export default async function EventDetailPage({ params }: EventDetailPageProps) 
             <FiEye className="h-5 w-5 text-primary" />
             Live Checkout Preview
           </CardTitle>
-          <CardDescription>Review the white-labeled checkout form directly within the dashboard.</CardDescription>
+          <CardDescription>Review and fine-tune the white-labeled checkout surface instantly.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="rounded-xl border border-border bg-card">
-            <CheckoutClient organizer={organizer} product={product} ticketTypes={ticketTypes} preview redirectUrl={null} />
-          </div>
+          <CheckoutPreviewCustomizer organizer={organizer} product={product} ticketTypes={ticketTypes} />
         </CardContent>
       </Card>
 

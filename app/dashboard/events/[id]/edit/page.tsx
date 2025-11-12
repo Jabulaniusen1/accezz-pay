@@ -24,7 +24,7 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
 
   const initialData = {
     productId: product.id,
-    title: product.title,
+    title: product.title ?? "",
     description: product.description ?? "",
     startDate: product.start_at ? new Date(product.start_at).toISOString().slice(0, 10) : "",
     startTime: product.start_at ? new Date(product.start_at).toISOString().slice(11, 16) : "",
@@ -40,12 +40,12 @@ export default async function EditEventPage({ params }: EditEventPageProps) {
     tickets:
       product.ticket_types?.map((ticket) => ({
         id: ticket.id,
-        name: ticket.name,
-        price: (ticket.price_cents / 100).toString(),
-        currency: ticket.currency,
-        quantity: ticket.quantity_total.toString(),
-        salesStart: ticket.sales_start ? ticket.sales_start.slice(0, 16) : "",
-        salesEnd: ticket.sales_end ? ticket.sales_end.slice(0, 16) : "",
+        name: ticket.name ?? "",
+        price: ((ticket.price_cents ?? 0) / 100).toString(),
+        currency: ticket.currency ?? "NGN",
+        quantity: (ticket.quantity_total ?? 0).toString(),
+        salesStart: ticket.sales_start ?? "",
+        salesEnd: ticket.sales_end ?? "",
         perCustomerLimit: ticket.sales_limit_per_customer ? ticket.sales_limit_per_customer.toString() : "",
       })) ?? [],
   }

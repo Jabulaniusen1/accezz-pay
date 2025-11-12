@@ -104,6 +104,7 @@ export function SettingsForm({ organizer, banks }: SettingsFormProps) {
   const [primaryColor, setPrimaryColor] = useState((branding.primaryColor as string) ?? "#6B21A8")
   const [secondaryColor, setSecondaryColor] = useState((branding.secondaryColor as string) ?? "#F3E8FF")
   const [fontFamily, setFontFamily] = useState((branding.fontFamily as string) ?? "Inter")
+  const [payoutSchedule, setPayoutSchedule] = useState(organizer.payout_schedule ?? "manual")
   const [logoPreview, setLogoPreview] = useState<string | null>((branding.logoUrl as string) ?? null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
@@ -315,6 +316,7 @@ export function SettingsForm({ organizer, banks }: SettingsFormProps) {
     formData.set("bank_code", selectedBankCode)
     formData.set("account_number", trimmedAccountNumber)
     formData.set("account_name", accountName)
+    formData.set("payout_schedule", payoutSchedule)
 
     if (hasAccountNumber && !selectedBankCode) {
       toast({
@@ -402,28 +404,40 @@ export function SettingsForm({ organizer, banks }: SettingsFormProps) {
   }
 
   return (
-    <Tabs defaultValue="branding" className="space-y-6">
-      <TabsList className="max-w-md">
-        <TabsTrigger value="branding">Branding</TabsTrigger>
-        <TabsTrigger value="profile">Profile</TabsTrigger>
+    <Tabs defaultValue="branding" className="space-y-8">
+      <TabsList className="flex w-full max-w-2xl justify-between rounded-full bg-white/70 p-1 ring-1 ring-slate-200 backdrop-blur">
+        <TabsTrigger
+          value="branding"
+          className="flex-1 rounded-full px-6 py-2 text-sm font-medium text-slate-500 transition data-[state=active]:bg-[var(--brand-primary)] data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-[var(--brand-primary)]/25"
+        >
+          Branding
+        </TabsTrigger>
+        <TabsTrigger
+          value="profile"
+          className="flex-1 rounded-full px-6 py-2 text-sm font-medium text-slate-500 transition data-[state=active]:bg-[var(--brand-primary)] data-[state=active]:text-white data-[state=active]:shadow-lg data-[state=active]:shadow-[var(--brand-primary)]/25"
+        >
+          Profile
+        </TabsTrigger>
       </TabsList>
 
       <TabsContent value="branding">
-      <Card>
-        <CardHeader>
-          <CardTitle>Branding</CardTitle>
-          <CardDescription>Customize your checkout look and feel.</CardDescription>
-        </CardHeader>
-        <CardContent>
-            <form className="space-y-6" onSubmit={handleBrandingSubmit} encType="multipart/form-data">
-              <div className="flex flex-col gap-8 lg:flex-row">
-              <div className="space-y-4">
+        <Card className="rounded-[32px] border-0 bg-white/90 shadow-[0_24px_48px_-32px_rgba(15,23,42,0.55)] ring-1 ring-slate-100">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl text-slate-900">Branding</CardTitle>
+            <CardDescription className="text-slate-500">
+              Customize your storefront colours, typography, and logo.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form className="space-y-8" onSubmit={handleBrandingSubmit} encType="multipart/form-data">
+              <div className="grid gap-8 lg:grid-cols-[auto_minmax(0,1fr)]">
+                <div className="space-y-4">
                   <div
                     role="button"
                     tabIndex={0}
                     onClick={handleLogoBoxClick}
                     onKeyDown={handleLogoKeyPress}
-                    className="group relative flex h-40 w-40 items-center justify-center overflow-hidden rounded-xl border border-dashed border-border bg-muted transition hover:border-primary hover:shadow-md focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:outline-none"
+                    className="group relative flex h-44 w-44 items-center justify-center overflow-hidden rounded-3xl border border-dashed border-slate-200 bg-slate-50/60 transition hover:border-[var(--brand-primary)] hover:bg-white hover:shadow-lg focus-visible:border-[var(--brand-primary)] focus-visible:ring-2 focus-visible:ring-[var(--brand-primary)]/30 focus-visible:outline-none"
                   >
                     {logoPreview ? (
                       <Image
@@ -435,12 +449,12 @@ export function SettingsForm({ organizer, banks }: SettingsFormProps) {
                         unoptimized
                       />
                     ) : (
-                      <span className="text-3xl font-semibold text-foreground/40">
+                      <span className="text-3xl font-semibold text-slate-300">
                         {organizer.name.slice(0, 2).toUpperCase()}
                       </span>
                     )}
-                    <div className="absolute bottom-2 right-2 rounded-full bg-background/80 p-2 shadow-sm backdrop-blur group-hover:bg-background">
-                      <Pencil className="h-4 w-4 text-foreground/70" aria-hidden="true" />
+                    <div className="absolute bottom-3 right-3 rounded-full bg-white/80 p-2 shadow-sm backdrop-blur group-hover:bg-white">
+                      <Pencil className="h-4 w-4 text-slate-500" aria-hidden="true" />
                     </div>
                   </div>
                   <input
@@ -452,21 +466,23 @@ export function SettingsForm({ organizer, banks }: SettingsFormProps) {
                     className="hidden"
                     onChange={handleLogoChange}
                   />
-                  <p className="text-xs text-foreground/60">Click the logo to upload. PNG or JPG, max 2MB.</p>
+                  <p className="text-xs text-slate-500">Click the card to upload. PNG or JPG, max 2MB.</p>
                 </div>
 
-                <div className="flex-1 space-y-6">
+                <div className="flex-1 space-y-8">
                   <div className="grid gap-6 sm:grid-cols-2">
                     <div className="space-y-2">
-                      <Label htmlFor="primaryColor">Primary Color</Label>
-                      <div className="flex items-center gap-3">
+                      <Label htmlFor="primaryColor" className="text-sm font-medium text-slate-600">
+                        Primary Colour
+                      </Label>
+                      <div className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50/60 p-3">
                         <div className="relative h-12 w-12">
                           <input
                             type="color"
                             id="primaryColorPicker"
                             value={primaryColor}
                             onChange={(event) => setPrimaryColor(event.target.value)}
-                            className="h-full w-full cursor-pointer rounded-md border border-border bg-transparent p-0 shadow-sm transition hover:shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
+                            className="h-full w-full cursor-pointer rounded-xl border border-transparent bg-transparent p-0 shadow-sm transition hover:border-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-primary)]/30"
                             aria-label="Select primary color"
                           />
                         </div>
@@ -476,21 +492,23 @@ export function SettingsForm({ organizer, banks }: SettingsFormProps) {
                           value={primaryColor}
                           onChange={(event) => setPrimaryColor(event.target.value)}
                           placeholder="#6B21A8"
-                          className="font-mono uppercase"
+                          className="h-12 rounded-xl border-slate-100 bg-white font-mono text-sm uppercase text-slate-700 focus-visible:border-[var(--brand-primary)]/40 focus-visible:ring-[var(--brand-primary)]/20"
                         />
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="secondaryColor">Secondary Color</Label>
-                      <div className="flex items-center gap-3">
+                      <Label htmlFor="secondaryColor" className="text-sm font-medium text-slate-600">
+                        Accent Colour
+                      </Label>
+                      <div className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50/60 p-3">
                         <div className="relative h-12 w-12">
                           <input
                             type="color"
                             id="secondaryColorPicker"
                             value={secondaryColor}
                             onChange={(event) => setSecondaryColor(event.target.value)}
-                            className="h-full w-full cursor-pointer rounded-md border border-border bg-transparent p-0 shadow-sm transition hover:shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20"
+                            className="h-full w-full cursor-pointer rounded-xl border border-transparent bg-transparent p-0 shadow-sm transition hover:border-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-primary)]/30"
                             aria-label="Select secondary color"
                           />
                         </div>
@@ -500,17 +518,19 @@ export function SettingsForm({ organizer, banks }: SettingsFormProps) {
                           value={secondaryColor}
                           onChange={(event) => setSecondaryColor(event.target.value)}
                           placeholder="#F3E8FF"
-                          className="font-mono uppercase"
+                          className="h-12 rounded-xl border-slate-100 bg-white font-mono text-sm uppercase text-slate-700 focus-visible:border-[var(--brand-primary)]/40 focus-visible:ring-[var(--brand-primary)]/20"
                         />
                       </div>
-              </div>
+                    </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="fontFamily">Font</Label>
+                    <Label htmlFor="fontFamily" className="text-sm font-medium text-slate-600">
+                      Typography
+                    </Label>
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
                       <Select value={fontFamily} onValueChange={(value) => setFontFamily(value)}>
-                        <SelectTrigger className="w-full sm:w-64" data-slot="font-select">
+                        <SelectTrigger className="w-full rounded-xl border-slate-200 bg-white/80 text-sm text-slate-600 shadow-sm sm:w-64" data-slot="font-select">
                           <SelectValue placeholder="Choose a font" />
                         </SelectTrigger>
                         <SelectContent>
@@ -521,12 +541,12 @@ export function SettingsForm({ organizer, banks }: SettingsFormProps) {
                         </SelectContent>
                       </Select>
                       <input type="hidden" name="fontFamily" value={fontFamily} />
-                </div>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-2">
+              <div className="flex flex-col-reverse items-stretch justify-end gap-3 pt-2 sm:flex-row sm:items-center">
                 <Button
                   type="reset"
                   variant="ghost"
@@ -548,9 +568,13 @@ export function SettingsForm({ organizer, banks }: SettingsFormProps) {
                 >
                   Reset
                 </Button>
-            <Button type="submit" disabled={brandingPending}>
-              {brandingPending ? "Saving..." : "Save Branding"}
-            </Button>
+                <Button
+                  type="submit"
+                  disabled={brandingPending}
+                  className="rounded-full bg-[var(--brand-primary)] px-6 text-white hover:bg-[var(--brand-primary)]/90"
+                >
+                  {brandingPending ? "Saving..." : "Save Branding"}
+                </Button>
               </div>
           </form>
         </CardContent>
@@ -558,58 +582,88 @@ export function SettingsForm({ organizer, banks }: SettingsFormProps) {
       </TabsContent>
 
       <TabsContent value="profile">
-      <Card>
-        <CardHeader>
-            <CardTitle>Profile</CardTitle>
-            <CardDescription>Manage your contact details, payouts, and integrations.</CardDescription>
-        </CardHeader>
-        <CardContent>
-            <form className="space-y-6" onSubmit={handleSettingsSubmit}>
+        <Card className="rounded-[32px] border-0 bg-white/90 shadow-[0_24px_48px_-32px_rgba(15,23,42,0.55)] ring-1 ring-slate-100">
+          <CardHeader className="pb-4">
+            <CardTitle className="text-xl text-slate-900">Profile</CardTitle>
+            <CardDescription className="text-slate-500">
+              Keep organizer contact details, settlement accounts, and integrations up to date.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form className="space-y-8" onSubmit={handleSettingsSubmit}>
               <div className="grid gap-6 md:grid-cols-2">
                 <div className="space-y-2">
-                <Label htmlFor="contact_person">Contact Person</Label>
-                <Input id="contact_person" name="contact_person" defaultValue={organizer.contact_person ?? ""} placeholder="Jane Doe" />
-              </div>
+                  <Label htmlFor="contact_person" className="text-sm font-medium text-slate-600">
+                    Contact Person
+                  </Label>
+                  <Input
+                    id="contact_person"
+                    name="contact_person"
+                    defaultValue={organizer.contact_person ?? ""}
+                    placeholder="Jane Doe"
+                    className="h-12 rounded-xl border-slate-200 bg-white text-sm text-slate-700 shadow-sm focus-visible:border-[var(--brand-primary)]/40 focus-visible:ring-[var(--brand-primary)]/20"
+                  />
+                </div>
                 <div className="space-y-2">
-                <Label htmlFor="phone">Phone</Label>
-                <Input id="phone" name="phone" defaultValue={organizer.phone ?? ""} placeholder="+2348012345678" />
-              </div>
+                  <Label htmlFor="phone" className="text-sm font-medium text-slate-600">
+                    Phone
+                  </Label>
+                  <Input
+                    id="phone"
+                    name="phone"
+                    defaultValue={organizer.phone ?? ""}
+                    placeholder="+2348012345678"
+                    className="h-12 rounded-xl border-slate-200 bg-white text-sm text-slate-700 shadow-sm focus-visible:border-[var(--brand-primary)]/40 focus-visible:ring-[var(--brand-primary)]/20"
+                  />
+                </div>
                 <div className="space-y-2">
-                <Label htmlFor="country">Country</Label>
-                <Input id="country" name="country" defaultValue={organizer.country ?? ""} placeholder="NG" />
-              </div>
+                  <Label htmlFor="country" className="text-sm font-medium text-slate-600">
+                    Country
+                  </Label>
+                  <Input
+                    id="country"
+                    name="country"
+                    defaultValue={organizer.country ?? ""}
+                    placeholder="NG"
+                    className="h-12 rounded-xl border-slate-200 bg-white text-sm text-slate-700 shadow-sm focus-visible:border-[var(--brand-primary)]/40 focus-visible:ring-[var(--brand-primary)]/20"
+                  />
+                </div>
                 <div className="space-y-2">
-                <Label htmlFor="payout_schedule">Payout Schedule</Label>
-                <select
-                  id="payout_schedule"
-                  name="payout_schedule"
-                  defaultValue={organizer.payout_schedule}
-                    className={cn(
-                      "h-10 w-full rounded-md border border-input bg-background px-3 text-sm shadow-sm transition focus-visible:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20",
-                    )}
-                >
-                  <option value="daily">Daily</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="manual">Manual</option>
-                </select>
+                  <Label htmlFor="payout_schedule" className="text-sm font-medium text-slate-600">
+                    Payout cadence
+                  </Label>
+                  <Select value={payoutSchedule} onValueChange={setPayoutSchedule}>
+                    <SelectTrigger className="h-12 rounded-xl border-slate-200 bg-white text-sm text-slate-700 shadow-sm">
+                      <SelectValue placeholder="Select schedule" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="daily">Daily</SelectItem>
+                      <SelectItem value="weekly">Weekly</SelectItem>
+                      <SelectItem value="manual">Manual</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <input type="hidden" name="payout_schedule" value={payoutSchedule} />
+                </div>
               </div>
-            </div>
 
               <div className="space-y-2">
-              <Label htmlFor="webhook_url">Webhook URL</Label>
+                <Label htmlFor="webhook_url" className="text-sm font-medium text-slate-600">
+                  Webhook URL
+                </Label>
                 <Input
                   id="webhook_url"
                   name="webhook_url"
                   defaultValue={organizer.webhook_url ?? ""}
                   placeholder="https://example.com/webhooks/payments"
+                  className="h-12 rounded-xl border-slate-200 bg-white text-sm text-slate-700 shadow-sm focus-visible:border-[var(--brand-primary)]/40 focus-visible:ring-[var(--brand-primary)]/20"
                 />
               </div>
 
-              <div className="rounded-xl border border-dashed border-border/80 bg-muted/40 p-4">
+              <div className="rounded-[28px] border border-dashed border-slate-200 bg-slate-50/60 p-6">
                 {hasBankDirectory ? (
-                  <div className="grid gap-6 md:grid-cols-[minmax(0,280px)_minmax(0,1fr)] md:items-start">
+                  <div className="grid gap-6 md:grid-cols-[minmax(0,300px)_minmax(0,1fr)] md:items-start">
                     <div className="space-y-2">
-                      <Label>Settlement Bank</Label>
+                      <Label className="text-sm font-medium text-slate-600">Settlement bank</Label>
                       <Popover open={isBankPopoverOpen} onOpenChange={setIsBankPopoverOpen}>
                         <PopoverTrigger asChild>
                           <Button
@@ -744,7 +798,9 @@ export function SettingsForm({ organizer, banks }: SettingsFormProps) {
 
                 <div className="mt-6 grid gap-6 md:grid-cols-2">
                   <div className="space-y-2">
-                <Label htmlFor="account_name">Account Name</Label>
+                    <Label htmlFor="account_name" className="text-sm font-medium text-slate-600">
+                      Account name
+                    </Label>
                     <Input
                       id="account_name"
                       name="account_name"
@@ -762,7 +818,9 @@ export function SettingsForm({ organizer, banks }: SettingsFormProps) {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="bank_code_display">Bank Code</Label>
+                    <Label htmlFor="bank_code_display" className="text-sm font-medium text-slate-600">
+                      Bank code
+                    </Label>
                     <Input
                       id="bank_code_display"
                       value={selectedBank?.code ?? ""}
@@ -784,7 +842,11 @@ export function SettingsForm({ organizer, banks }: SettingsFormProps) {
               </div>
 
               <div className="flex justify-end">
-                <Button type="submit" disabled={settingsPending}>
+                <Button
+                  type="submit"
+                  disabled={settingsPending}
+                  className="rounded-full bg-[var(--brand-primary)] px-6 text-white hover:bg-[var(--brand-primary)]/90"
+                >
                   {settingsPending ? "Saving..." : "Save Profile"}
                 </Button>
               </div>

@@ -44,7 +44,7 @@ export async function getProductById(productId: string): Promise<Product | null>
 }
 
 export async function getProductWithTicketTypes(productId: string): Promise<ProductWithRelations | null> {
-  if (!productId || !/^[0-9a-fA-F-]{36}$/.test(productId)) {
+  if (!productId) {
     return null
   }
   const { data, error } = await supabaseAdminClient.from("products").select("*, ticket_types(*)").eq("id", productId).maybeSingle()

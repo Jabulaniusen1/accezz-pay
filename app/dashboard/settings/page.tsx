@@ -23,10 +23,13 @@ export default async function SettingsPage() {
   })
 
   return (
-    <div className="p-8 space-y-8">
-      <div>
-        <h1 className="text-4xl font-bold text-foreground mb-2">Branding & Settings</h1>
-        <p className="text-foreground/70">Update your organizer profile and checkout experience.</p>
+    <div className="space-y-8">
+      <div className="rounded-3xl bg-gradient-to-br from-white/90 via-white to-white/80 p-8 shadow-[0_24px_48px_-32px_rgba(15,23,42,0.45)] ring-1 ring-slate-100">
+        <p className="text-sm font-semibold uppercase tracking-widest text-slate-400">Customize</p>
+        <h1 className="mt-2 text-3xl font-bold text-slate-900">Branding & Profile</h1>
+        <p className="mt-1 text-sm text-slate-500">
+          Refresh your storefront visuals and keep payout details current for seamless settlements.
+        </p>
       </div>
       <SettingsForm organizer={organizer} banks={banks} />
     </div>

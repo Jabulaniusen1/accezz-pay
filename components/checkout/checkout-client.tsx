@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-
+import { Calendar, MapPin, ShieldCheck, Smartphone, TicketIcon, User, Mail } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -88,9 +88,9 @@ export function CheckoutClient({ organizer, product, ticketTypes, redirectUrl, p
 
   return (
     <div className={cn(preview ? "p-6" : "min-h-screen p-4")} style={themeVariables}>
-      <div className={cn("mx-auto grid gap-8", preview ? "lg:grid-cols-2" : "max-w-6xl lg:grid-cols-3 py-12")}>
-        <div className={cn("space-y-6", preview ? "" : "lg:col-span-2")}>
-          <div className="flex items-center gap-3 mb-8">
+      <div className={cn("mx-auto grid gap-8", preview ? "lg:grid-cols-[minmax(0,1fr)_minmax(340px,0.9fr)]" : "max-w-6xl lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] py-12")}> 
+        <div className={cn("space-y-6", preview ? "" : "lg:pl-2")}> 
+          <div className="flex items-center gap-3 rounded-3xl border border-border/60 bg-card/90 px-4 py-3 shadow-sm">
             {typeof branding.logoUrl === "string" && branding.logoUrl.length > 0 ? (
               <Image src={branding.logoUrl} alt={organizer.name} width={48} height={48} className="rounded-lg" />
             ) : (
@@ -103,40 +103,52 @@ export function CheckoutClient({ organizer, product, ticketTypes, redirectUrl, p
             </span>
           </div>
 
-          <div className="space-y-4">
-            <h1 className="text-4xl font-bold text-foreground" style={{ fontFamily: "var(--brand-font)" }}>
+          <div className="space-y-6 rounded-3xl border border-border/60 bg-card/90 px-6 py-6 shadow-sm">
+            <div className="flex items-center gap-3">
+              <TicketIcon className="h-6 w-6 text-[color:var(--brand-primary)]" />
+              <h1 className="text-4xl font-bold text-foreground" style={{ fontFamily: "var(--brand-font)" }}>
               {product.title}
-            </h1>
+              </h1>
+            </div>
             {product.description && <p className="text-foreground/70 leading-relaxed">{product.description}</p>}
             <div className="grid gap-4 md:grid-cols-3">
               {product.start_at && (
-                <div className="bg-card p-4 rounded-lg border border-border">
-                  <p className="text-xs text-foreground/70 mb-1">Starts</p>
-                  <p className="font-semibold text-foreground">{formatDate(product.start_at)}</p>
+                <div className="relative overflow-hidden rounded-2xl border border-border/80 bg-white/90 p-4">
+                  <Calendar className="absolute -top-6 -right-6 h-24 w-24 text-[color:var(--brand-primary)]/10" />
+                  <p className="text-xs font-semibold uppercase tracking-wide text-foreground/50">Starts</p>
+                  <p className="mt-2 text-sm font-medium text-foreground">{formatDate(product.start_at)}</p>
                 </div>
               )}
               {product.end_at && (
-                <div className="bg-card p-4 rounded-lg border border-border">
-                  <p className="text-xs text-foreground/70 mb-1">Ends</p>
-                  <p className="font-semibold text-foreground">{formatDate(product.end_at)}</p>
+                <div className="relative overflow-hidden rounded-2xl border border-border/80 bg-white/90 p-4">
+                  <Calendar className="absolute -top-6 -right-6 h-24 w-24 text-[color:var(--brand-primary)]/10" />
+                  <p className="text-xs font-semibold uppercase tracking-wide text-foreground/50">Ends</p>
+                  <p className="mt-2 text-sm font-medium text-foreground">{formatDate(product.end_at)}</p>
                 </div>
               )}
               {product.venue?.name && (
-                <div className="bg-card p-4 rounded-lg border border-border">
-                  <p className="text-xs text-foreground/70 mb-1">Venue</p>
-                  <p className="font-semibold text-foreground">{product.venue.name}</p>
+                <div className="relative overflow-hidden rounded-2xl border border-border/80 bg-white/90 p-4">
+                  <MapPin className="absolute -top-6 -right-6 h-24 w-24 text-[color:var(--brand-primary)]/10" />
+                  <p className="text-xs font-semibold uppercase tracking-wide text-foreground/50">Venue</p>
+                  <p className="mt-2 text-sm font-medium text-foreground">{product.venue.name}</p>
                 </div>
               )}
             </div>
           </div>
 
-          <div className="space-y-3">
-            <h2 className="text-2xl font-semibold" style={{ fontFamily: "var(--brand-font)" }}>
-              Select Tickets
-            </h2>
+          <div className="space-y-4 rounded-3xl border border-border/60 bg-card/90 px-6 py-6 shadow-sm">
+            <div className="flex items-center gap-3">
+              <TicketIcon className="h-5 w-5 text-[color:var(--brand-primary)]" />
+              <h2 className="text-2xl font-semibold" style={{ fontFamily: "var(--brand-font)" }}>
+                Select Tickets
+              </h2>
+            </div>
             <div className="space-y-4">
               {ticketTypes.map((ticket) => {
                 const isSelected = selectedTicketId === ticket.id
+                const priceLabel = formatCurrencyFromCents(ticket.price_cents, ticket.currency)
+                const ticketDescription = ticket.description ?? `SKU: ${ticket.sku}`
+
                 return (
                   <button
                     key={ticket.id}
@@ -144,24 +156,54 @@ export function CheckoutClient({ organizer, product, ticketTypes, redirectUrl, p
                     onClick={() => setSelectedTicketId(ticket.id)}
                     disabled={ticket.quantity_available <= 0}
                     className={cn(
-                      "w-full text-left p-4 rounded-lg border transition-all",
-                      "disabled:opacity-60 disabled:cursor-not-allowed",
-                      isSelected ? "border-[color:var(--brand-primary)] bg-[color:var(--brand-secondary)]/30" : "border-border hover:border-[color:var(--brand-primary)]/40"
+                      "relative w-full overflow-hidden rounded-[28px] border text-left transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--brand-primary)]/40",
+                      "disabled:cursor-not-allowed disabled:opacity-60",
+                      isSelected
+                        ? "border-[color:var(--brand-primary)] bg-[color:var(--brand-secondary)]/40 shadow-[0_18px_40px_-28px_rgba(107,33,168,0.6)]"
+                        : "border-transparent bg-card hover:border-[color:var(--brand-primary)]/30 hover:shadow-[0_12px_34px_-30px_rgba(15,23,42,0.75)]"
                     )}
                   >
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <p className="font-semibold text-foreground" style={{ fontFamily: "var(--brand-font)" }}>
-                          {ticket.name}
-                        </p>
-                        <p className="text-sm text-foreground/70">SKU: {ticket.sku}</p>
-                        <p className="text-xs text-foreground/60 mt-1">
-                          {ticket.quantity_available} of {ticket.quantity_total} remaining
+                    <div className="flex items-stretch">
+                      <div className="flex flex-1 items-center gap-4 p-5 pr-6">
+                        <div
+                          className={cn(
+                            "flex h-12 w-12 items-center justify-center rounded-2xl text-lg",
+                            isSelected
+                              ? "bg-[color:var(--brand-primary)] text-white shadow-[0_8px_16px_-12px_rgba(107,33,168,0.8)]"
+                              : "bg-[color:var(--brand-secondary)] text-[color:var(--brand-primary)]"
+                          )}
+                        >
+                          <TicketIcon className="h-6 w-6" />
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-base font-semibold text-foreground" style={{ fontFamily: "var(--brand-font)" }}>
+                            {ticket.name}
+                          </p>
+                          <p className="text-sm text-foreground/70" style={{ fontFamily: "var(--brand-font)" }}>
+                            {ticketDescription}
+                          </p>
+                          <p className="text-xs text-foreground/60" style={{ fontFamily: "var(--brand-font)" }}>
+                            {ticket.quantity_available} of {ticket.quantity_total} remaining
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="relative hidden w-auto min-w-[140px] shrink-0 items-center justify-center bg-white/75 pr-5 sm:flex">
+                        <div className="absolute inset-y-4 left-0 w-px border-l border-dashed border-[color:var(--brand-primary)]/30" />
+                        <div className="absolute top-6 -left-2 h-6 w-6 rounded-full border border-[color:var(--brand-primary)]/20 bg-card" />
+                        <div className="absolute bottom-6 -left-2 h-6 w-6 rounded-full border border-[color:var(--brand-primary)]/20 bg-card" />
+                        <p
+                          className="ml-6 text-2xl font-bold text-[color:var(--brand-primary)]"
+                          style={{ fontFamily: "var(--brand-font)" }}
+                        >
+                          {priceLabel}
                         </p>
                       </div>
-                      <p className="text-2xl font-bold text-[color:var(--brand-primary)]" style={{ fontFamily: "var(--brand-font)" }}>
-                        {formatCurrencyFromCents(ticket.price_cents, ticket.currency)}
-                      </p>
+                    </div>
+                    <div className="mt-3 flex items-center justify-end px-5 pb-4 sm:hidden">
+                      <span className="text-lg font-semibold text-[color:var(--brand-primary)]" style={{ fontFamily: "var(--brand-font)" }}>
+                        {priceLabel}
+                      </span>
                     </div>
                   </button>
                 )
@@ -170,8 +212,8 @@ export function CheckoutClient({ organizer, product, ticketTypes, redirectUrl, p
           </div>
         </div>
 
-        <div className={cn(preview ? "" : "lg:col-span-1")}>
-          <Card className="sticky top-6 border border-[color:var(--brand-primary)]/30">
+        <div className={cn(preview ? "" : "lg:col-span-1")}> 
+          <Card className="sticky top-6 border border-[color:var(--brand-primary)]/30 shadow-xl shadow-[color:var(--brand-primary)]/10">
             <CardContent className="pt-6 space-y-6">
               {preview && (
                 <div className="rounded-lg border border-dashed border-[color:var(--brand-primary)]/60 bg-[color:var(--brand-secondary)]/20 p-3 text-xs text-[color:var(--brand-primary)]">
@@ -179,9 +221,12 @@ export function CheckoutClient({ organizer, product, ticketTypes, redirectUrl, p
                 </div>
               )}
               <div>
-                <h3 className="font-bold text-foreground mb-4" style={{ fontFamily: "var(--brand-font)" }}>
-                  Order Summary
-                </h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold text-foreground" style={{ fontFamily: "var(--brand-font)" }}>
+                    Order Summary
+                  </h3>
+                  <ShieldCheck className="h-4 w-4 text-[color:var(--brand-primary)]" />
+                </div>
                 {selectedTicket ? (
                   <>
                     <div className="flex items-center justify-between">
@@ -252,7 +297,9 @@ export function CheckoutClient({ organizer, product, ticketTypes, redirectUrl, p
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="buyer_phone">Phone (optional)</Label>
+                  <Label htmlFor="buyer_phone" className="flex items-center gap-2">
+                    <Smartphone className="h-4 w-4 text-foreground/60" /> Phone (optional)
+                  </Label>
                   <Input
                     id="buyer_phone"
                     placeholder="+2348000000000"
@@ -273,10 +320,15 @@ export function CheckoutClient({ organizer, product, ticketTypes, redirectUrl, p
                   {preview ? "Preview Mode" : isPending ? "Initializing payment..." : `Pay ${formatCurrencyFromCents(totalCents, selectedTicket?.currency ?? "NGN")}`}
                 </Button>
 
-                <p className="text-xs text-foreground/60 text-center">
-                  Payments securely processed by Paystack. Powered by{" "}
-                  <span className="font-semibold text-[color:var(--brand-primary)]">AccezzPay</span>
-                </p>
+                <div className="flex flex-col items-center gap-2 text-xs text-foreground/60">
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="h-4 w-4 text-[color:var(--brand-primary)]" />
+                    <span>
+                      Powered by <span className="font-semibold text-[color:var(--brand-primary)]">AccezzPay</span>
+                    </span>
+                  </div>
+                  
+                </div>
               </form>
             </CardContent>
           </Card>

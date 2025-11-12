@@ -1,31 +1,56 @@
 import { NextResponse } from "next/server"
 
-import { getOrderByReference } from "@/lib/data/orders"
+import { getOrderById, getOrderByReference, updateOrderStatus, updatePaymentStatusByReference } from "@/lib/data/orders"
 import { getOrganizerById } from "@/lib/data/organizers"
 import { getProductWithTicketTypes } from "@/lib/data/products"
 import { listTicketsForOrder } from "@/lib/data/tickets"
 import { buildReceiptPdfBuffer, getReceiptFileName } from "@/lib/receipts"
+import { verifyPaystackTransaction } from "@/lib/paystack"
 
 type RouteContext = {
-  params: {
+  params: Promise<{
     reference: string
-  }
+  }>
 }
 
 export async function GET(_request: Request, { params }: RouteContext) {
-  const { reference } = params
+  const { reference } = await params
 
   if (!reference) {
     return NextResponse.json({ error: "Reference is required" }, { status: 400 })
   }
 
-  const order = await getOrderByReference(reference)
+  let verification
+  try {
+    verification = await verifyPaystackTransaction(reference)
+  } catch (error) {
+    console.error("verifyPaystackTransaction failed", error)
+    return NextResponse.json({ error: "Unable to verify payment. Try again shortly." }, { status: 502 })
+  }
+
+  if (!verification.status || verification.data.status !== "success") {
+    return NextResponse.json({ error: "Payment not completed yet" }, { status: 409 })
+  }
+
+  let order = await getOrderByReference(reference)
+  if (!order) {
+    const metadataOrderId = (verification.data.metadata?.order_id as string | undefined) ?? null
+    if (metadataOrderId) {
+      order = await getOrderById(metadataOrderId)
+    }
+  }
+
   if (!order) {
     return NextResponse.json({ error: "Receipt not found" }, { status: 404 })
   }
 
   if (order.status !== "paid") {
-    return NextResponse.json({ error: "Receipt not available until payment is confirmed" }, { status: 409 })
+    await updateOrderStatus(order.id, "paid")
+    await updatePaymentStatusByReference(reference, "paid", verification.data as Record<string, unknown>)
+    order = {
+      ...order,
+      status: "paid",
+    }
   }
 
   const organizer = await getOrganizerById(order.organizer_id)
@@ -40,8 +65,9 @@ export async function GET(_request: Request, { params }: RouteContext) {
 
   const tickets = await listTicketsForOrder(order.id)
   const pdfBuffer = await buildReceiptPdfBuffer({ order, organizer, product, tickets })
+  const pdfArray = new Uint8Array(pdfBuffer)
 
-  return new NextResponse(pdfBuffer, {
+  return new NextResponse(pdfArray, {
     headers: {
       "Content-Type": "application/pdf",
       "Content-Disposition": `attachment; filename="${getReceiptFileName(order)}"`,
